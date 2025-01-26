@@ -45,6 +45,18 @@ namespace DoubTech.ComfyUI
         protected virtual void OnWebSocketMessage(byte[] messageBytes)
         {
             string messageString = Encoding.UTF8.GetString(messageBytes);
+            if (!messageString.Trim().StartsWith('{'))
+            {
+                // Assume this might be binary image data and try to parse it
+                var texture = OnGetTargetTexture();
+                if(!texture) texture = new Texture2D(2, 2);
+                if (texture.LoadImage(messageBytes))
+                {
+                    onImageReceived?.Invoke(texture);
+                }
+
+                return;
+            }
             Debug.Log($"Received message: {messageString}");
             MessageBase message = JsonConvert.DeserializeObject<MessageBase>(messageString);
 
