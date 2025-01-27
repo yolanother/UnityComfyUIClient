@@ -15,6 +15,19 @@ UnityComfyUIClient is a library designed to facilitate the integration of Comfy 
 
 ## Installation
 
+### Via Unity Package Manager
+
+To install UnityComfyUIClient using the Unity Package Manager, follow these steps:
+
+1. Open your Unity project.
+2. Go to `Window` > `Package Manager`.
+3. Click on the `+` button in the top left corner and select `Add package from git URL...`.
+4. Enter the following URL:
+   ```
+   https://github.com/yourusername/UnityComfyUIClient.git
+   ```
+5. Click `Add` to install the package.
+
 To install UnityComfyUIClient, follow these steps:
 
 1. Clone the repository:
