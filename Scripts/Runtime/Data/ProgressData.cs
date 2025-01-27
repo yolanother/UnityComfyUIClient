@@ -19,5 +19,8 @@ namespace DoubTech.ComfyUI.Data
 
         [JsonProperty("node")]
         public string Node { get; set; }
+        
+        [JsonIgnore]
+        public string NodeName { get; set; }
     }
 }

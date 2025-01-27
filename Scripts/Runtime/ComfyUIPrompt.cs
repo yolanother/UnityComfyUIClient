@@ -1,17 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using DoubTech.ComfyUI.Data;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace DoubTech.ComfyUI
 {
     public class ComfyUIPrompt : MonoBehaviour
     {
+        [Header("Base Configuration")]
         [SerializeField] private TextAsset promptTemplate;
         [SerializeField] private BaseComfyUIRequest comfyUI;
+        
+        [Header("Seeding")]
+        [SerializeField] private bool randomSeed;
+        [SerializeField] private long seed;
         
         private Dictionary<string, object> variables = new(); 
         
@@ -19,6 +26,11 @@ namespace DoubTech.ComfyUI
         {
             get => variables.TryGetValue(key, out var v) ? v : null;
             set => variables[key] = value;
+        }
+
+        public void GenerateSeed()
+        {
+            seed = Random.Range(0, int.MaxValue);
         }
 
         public void SubmitPrompt()
@@ -41,6 +53,14 @@ namespace DoubTech.ComfyUI
 
         protected virtual string OnPreparePrompt(string prompt)
         {
+            if (randomSeed)
+            {
+                GenerateSeed();
+            }
+            
+            // Replace any variable that might be in the prompt with the value including variables with default values $(variable_name:optional_default_value) or $(variable_name) replacing all with the value using regex
+            
+            this["seed"] = seed;
             foreach (var variable in variables)
             {
                 var value = variable.Value;
@@ -70,9 +90,8 @@ namespace DoubTech.ComfyUI
                         stringValue = "data:image/png;base64," + System.Convert.ToBase64String(((Texture2D) image.texture).EncodeToPNG());
                     }
                 }
-                else
+                else if(value is string str)
                 {
-                    var str = value?.ToString();
                     if (!string.IsNullOrEmpty(str))
                     {
                         // Trim end spaces and leading/trailing "
@@ -84,9 +103,25 @@ namespace DoubTech.ComfyUI
                         stringValue = stringValue[9..^4];
                     }
                 }
+                else if(null != value)
+                {
+                    stringValue = value.ToString();
+                }
                 
                 prompt = prompt.Replace($"{{{variable.Key}}}", stringValue);
-                prompt = prompt.Replace($"$({variable.Key})", stringValue);
+                
+                var varRegex = new Regex(@"\$\(" + variable.Key + @"(:([^)]+))?\)", RegexOptions.Compiled);
+                // Replace the matches with the value
+                prompt = varRegex.Replace(prompt, stringValue);
+            }
+            var regex = new Regex(@"\$\(([^:)]+):([^)]+)\)", RegexOptions.Compiled);
+            // Find variables in the prompt that aren't set and replace with any default values syntax is $(variable:default)
+            var matches = regex.Matches(prompt);
+            foreach (Match match in matches)
+            {
+                var v = match.Groups[1].Value;
+                var defaultValue = match.Groups[2].Value;
+                prompt = prompt.Replace(match.Value, defaultValue);
             }
 
             return prompt;

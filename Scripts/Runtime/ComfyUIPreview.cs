@@ -24,10 +24,9 @@ namespace DoubTech.ComfyUI
 
         private void Start()
         {
-            // Create a protected copy of the raw image's texture for use in the WebSocket with the same format as the texture in the rawImage
-            var texture = (Texture2D)rawImage.texture;
-            currentTexture = new Texture2D(texture.width, texture.height);
-            currentTexture.SetPixels(texture.GetPixels());
+            // Create a 1024x1024 texture and fill it with black
+            currentTexture = new Texture2D(rawImage.texture.width, rawImage.texture.height);
+            currentTexture.SetPixels(new Color[currentTexture.width * currentTexture.height]);
             currentTexture.Apply();
         }
 
@@ -48,14 +47,6 @@ namespace DoubTech.ComfyUI
         public override void OnInspectorGUI()
         {
             ComfyUIPreview script = (ComfyUIPreview)target;
-
-            script.Host = EditorGUILayout.TextField("Host", script.Host);
-            script.Port = EditorGUILayout.IntField("Port", script.Port);
-
-            if (GUILayout.Button("Connect"))
-            {
-                script.Connect();
-            }
 
             EditorGUILayout.Space();
 
